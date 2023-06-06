@@ -3,6 +3,7 @@ use crate::http_methods::{Delete, Post, Put, Get};
 
 pub trait Route {
     fn return_method<'a> (self: &'a Self) -> &'a Box<dyn Fn()>;
+    fn ret_http_method(self: &Self) -> &str;
 //...TO BE DECIDED
 }
 

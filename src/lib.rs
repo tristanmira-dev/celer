@@ -7,20 +7,22 @@ pub mod handlers {
 }
 pub mod http_methods;
 
+pub mod thread_pool;
+
 
 pub struct Application {
-    listener: Result<TcpListener, Error>
+    listener: Result<TcpListener, Error>,
+    route_collection: RouteHandler
 }
 
 impl Application {
     pub fn new(address: &str, port: &str) -> Self {
         let full_address = address.to_string() + ":" + port;
         let listener = TcpListener::bind(&full_address);
-        let mut test =  RouteHandler::new();
-
 
         Application {
-            listener
+            listener,
+            route_collection: RouteHandler::new()
         }
     
     }
@@ -32,7 +34,7 @@ impl Application {
                 for stream in listener.incoming() {
                     match stream {
                         Result::Ok(val) => { 
-                            handlers::connection_handler::stream_handler(val);
+                            handlers::connection_handler::stream_handler(val, &self.route_collection);
                         },
                         Result::Err(err) => {
 

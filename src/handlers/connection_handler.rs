@@ -1,12 +1,18 @@
 use std::net::TcpStream;
-use std::io::{BufReader, BufRead};
+use std::io::{BufReader, BufRead, Write};
+use super::route_handler::RouteHandler;
 
+pub fn route_handler (route_handler: &mut RouteHandler) {
+    
+}
 
-pub fn stream_handler (mut stream: TcpStream) {
-    println!("TEST");
+pub fn stream_handler (mut stream: TcpStream, routes: &RouteHandler) {
+
     let buffer = BufReader::new(&mut stream);
 
     let mut request_iter = buffer.lines().map(|x| x.unwrap()).into_iter();
+
+    let mut request_vec: Vec<String> = Vec::new();
 
     let counter: usize = 0;
 
@@ -17,7 +23,11 @@ pub fn stream_handler (mut stream: TcpStream) {
                     break
                 };
 
-                dbg!(val);
+                
+                dbg!(&val);
+
+                request_vec.push(val);
+
                 continue;
             },
             None => {
@@ -28,6 +38,8 @@ pub fn stream_handler (mut stream: TcpStream) {
 
 
     }
+
+    stream.write(b"Hardcoded").unwrap();
 
 
     

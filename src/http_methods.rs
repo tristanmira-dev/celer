@@ -27,6 +27,9 @@ impl Route for Get {
     fn return_method<'a> (self: &'a Self) -> &'a Box<dyn Fn()> {
         &self.function
     }
+    fn ret_http_method(self: &Self) -> &str {
+        &self.method
+    }
 }
 
 pub struct Post {
@@ -48,6 +51,9 @@ impl Post {
 impl Route for Post {
     fn return_method<'a> (self: &'a Self) -> &'a Box<dyn Fn()> {
         &self.function
+    }
+    fn ret_http_method(self: &Self) -> &str {
+        &self.method
     }
 }
 
@@ -71,6 +77,9 @@ impl Route for Delete {
     fn return_method<'a> (self: &'a Self) -> &'a Box<dyn Fn()> {
         &self.function
     }
+    fn ret_http_method(self: &Self) -> &str {
+        &self.method
+    }
 }
 
 pub struct Put {
@@ -92,5 +101,8 @@ impl Put {
 impl Route for Put {
     fn return_method<'a> (self: &'a Self) -> &'a Box<dyn Fn()> {
         &self.function
+    }
+    fn ret_http_method(self: &Self) -> &str {
+        &self.method
     }
 }
