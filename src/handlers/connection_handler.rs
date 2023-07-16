@@ -1,12 +1,15 @@
+use std::collections::HashMap;
 use std::net::TcpStream;
 use std::io::{BufReader, BufRead, Write};
+use crate::resource_sys::system::{ArgsCollection, Req, Res};
+
 use super::route_handler::RouteHandler;
 
 pub fn route_handler (route_handler: &mut RouteHandler) {
     
 }
 
-pub fn stream_handler (mut stream: TcpStream, routes: &RouteHandler) {
+pub fn stream_handler (mut stream: TcpStream, routes: &mut RouteHandler) {
 
     let buffer = BufReader::new(&mut stream);
 
@@ -23,9 +26,6 @@ pub fn stream_handler (mut stream: TcpStream, routes: &RouteHandler) {
                     break
                 };
 
-                
-                dbg!(&val);
-
                 request_vec.push(val);
 
                 continue;
@@ -34,12 +34,38 @@ pub fn stream_handler (mut stream: TcpStream, routes: &RouteHandler) {
                 break;
             }
         };
-        
-
-
+    
     }
+    
+    let req_method_vec = &request_vec[0];
 
-    stream.write(b"Hardcoded").unwrap();
+    let req_method_vec: Vec<&str> = req_method_vec.split(' ').collect();
+
+    dbg!(&req_method_vec);
+
+    let i: i32 = 50;
+
+    let mut args = ArgsCollection::init();
+
+    args.add_param(Req {
+        inner: "Req".to_string()
+    });
+
+    args.add_param(Res {
+        inner: "Res".to_string()
+    });
+
+    let opt = routes.execute_route(req_method_vec[1].to_string(), args);
+
+    // dbg!(opt.return_method()());
+
+    let status_line = "HTTP/1.1 200 OK";
+    // let content = opt.return_method()();
+    let string = "5".to_string();
+    let response = format!("{status_line}\r\nContent-Length:{string}\r\n\r\n{}", string.len());
+
+
+    stream.write_all(response.as_bytes()).unwrap();
 
 
     

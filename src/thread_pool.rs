@@ -1,15 +1,17 @@
 use std::{sync::{Arc, mpsc::{Receiver, Sender, channel}, Mutex}, thread};
 
+use crate::resource_sys::system::System;
+
 
 
 pub struct ThreadPool {
-    sender: Sender<Box<dyn FnOnce() + Send>>
+    sender: Sender<Box<dyn System + Send>>
 }
 
 impl ThreadPool {
     fn new(pool_size: usize) -> ThreadPool {
 
-        let (sender, recv) = channel::<Box<dyn FnOnce() + Send>>();
+        let (sender, recv) = channel::<Box<dyn System + Send>>();
 
         let recv = Arc::new(Mutex::new(recv));
 
@@ -26,7 +28,7 @@ impl ThreadPool {
 
                 println!("WORKER {} RECEIVED JOB", i);
 
-                val()
+                // val.call_system(args)
             });
 
         }
