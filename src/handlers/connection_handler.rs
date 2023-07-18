@@ -47,15 +47,18 @@ pub fn stream_handler (mut stream: TcpStream, routes: &mut RouteHandler) {
 
     let mut args = ArgsCollection::init();
 
+
+    //DUMMY DATA
     args.add_param(Req {
-        inner: "Req".to_string()
+        inner: 12
     });
 
+    //DUMMY DATA
     args.add_param(Res {
-        inner: "Res".to_string()
+        inner: 40
     });
 
-    let opt = routes.execute_route(req_method_vec[1].to_string(), args);
+    let opt = routes.execute_route("GET /test".to_string(), args);
 
     // dbg!(opt.return_method()());
 

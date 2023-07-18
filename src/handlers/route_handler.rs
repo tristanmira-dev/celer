@@ -11,6 +11,11 @@ use crate::http::transaction::Response;
 // //...TO BE DECIDED
 // }
 
+pub struct RouteDetails {
+    pub method: String,
+    pub route: String
+}
+
 
 pub struct RouteHandler {
     pub routes: HashMap<String, Box<dyn system::System>>
@@ -21,6 +26,16 @@ impl RouteHandler {
         println!("{}", route);
         self.routes.get_mut(&route).unwrap().call_system(&mut args.args);
     }
+
+
+    pub fn insert_route(route: RouteDetails, f: Box<dyn system::System>) -> HashMap<String, Box<dyn system::System>> {
+        let mut hash_map = HashMap::new();
+
+        hash_map.insert(route.method + " " + &route.route, f);
+
+        return hash_map;
+    }
+
 }
 
 
