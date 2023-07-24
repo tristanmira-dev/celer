@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::net::TcpStream;
 use std::io::{BufReader, BufRead, Write};
 use crate::resource_sys::system::{ArgsCollection, Req, Res};
+use crate::utils::parser::parse_request;
 
 use super::route_handler::RouteHandler;
 
@@ -15,35 +16,9 @@ pub fn stream_handler (mut stream: TcpStream, routes: &mut RouteHandler) {
 
     let mut request_iter = buffer.lines().map(|x| x.unwrap()).into_iter();
 
-    let mut request_vec: Vec<String> = Vec::new();
+    let request_iter = parse_request(&mut request_iter);
 
-    let counter: usize = 0;
-
-    loop {
-        match request_iter.next() {
-            Some(val) => {
-                if val == "" {
-                    break
-                };
-
-                request_vec.push(val);
-
-                continue;
-            },
-            None => {
-                break;
-            }
-        };
-    
-    }
-    
-    let req_method_vec = &request_vec[0];
-
-    let req_method_vec: Vec<&str> = req_method_vec.split(' ').collect();
-
-    dbg!(&req_method_vec);
-
-    let i: i32 = 50;
+    dbg!(&request_iter);
 
     let mut args = ArgsCollection::init();
 
