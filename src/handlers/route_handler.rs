@@ -28,6 +28,11 @@ impl RouteHandler {
         }
     }
 
+    pub fn to_route(req_collection: Vec<String>) -> String {
+        return req_collection[0].to_string() + " " + &req_collection[1];
+          
+    }
+
     pub fn get<T: System + 'static>(self, route: String, f: T) -> Self {
         let route = RouteDetails { method: "GET".to_string(), route };
 
@@ -60,9 +65,7 @@ impl RouteHandler {
     }
 
 
-
     pub fn execute_route(&mut self, route: String, mut args: ArgsCollection) {
-        println!("{}", route);
         self.routes.get_mut(&route).unwrap().call_system(&mut args.args);
     }
 

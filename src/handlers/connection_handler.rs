@@ -25,15 +25,10 @@ pub fn stream_handler (mut stream: TcpStream, routes: &mut RouteHandler) {
 
     //DUMMY DATA
     args.add_param(Req {
-        inner: 12
+        inner: 300
     });
 
-    //DUMMY DATA
-    args.add_param(Res {
-        inner: 40
-    });
-
-    let opt = routes.execute_route("GET /test".to_string(), args);
+    let opt = routes.execute_route(RouteHandler::to_route(request_iter), args);
 
     // dbg!(opt.return_method()());
 
