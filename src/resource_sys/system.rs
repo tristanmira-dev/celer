@@ -1,8 +1,18 @@
 use std::{marker::PhantomData, collections::HashMap, any::{TypeId, Any}, fmt::Display};
 
+type CollectionType = HashMap<TypeId, Box<dyn Any>>;
+
+
+
+
 pub struct ArgsCollection {
-    pub args: HashMap<TypeId, Box<dyn Any>>
+    pub args: CollectionType,
 }
+
+pub trait GlobalTrait: Any + Sized {
+    fn to_any(self) -> Box<dyn Any> { Box::new(self) }
+}
+
 
 impl ArgsCollection {
     pub fn init() -> Self {
@@ -12,11 +22,15 @@ impl ArgsCollection {
     pub fn add_param<T: SystemParam + 'static>(self: &mut Self, val: T) {
         self.args.insert(TypeId::of::<T>(), Box::new(val.get_inner()));
     }
+
+    pub fn add_global<T: SystemParam + 'static, Type: 'static>(self: &mut Self, global: Global<Type>) {
+        self.args.insert(TypeId::of::<Global<Type>>() , global.to_any());
+    }
 }
 
 pub struct FunctionStruct<Input, F> {
     f: F,
-    marker: PhantomData<Input>
+    marker: PhantomData<Input>,
 }
 
 pub trait System {
@@ -106,25 +120,27 @@ pub struct Res<T> {
     pub inner: T
 }
 
-pub struct Global<'a, T> {
-    pub inner: &'a T
+pub struct Global<T> {
+    pub inner: T
 }
 
-impl<'a, T: Any> SystemParam for Global<'a, T> {
-    type FnParamType<'new> = Global<'new, T>;
 
-    type InnerType = &'a T;
+impl<T: 'static> GlobalTrait for Global<T> {}
+
+impl<'a, T: Any + Clone> SystemParam for Global<T> {
+    type FnParamType<'new> = Global<T>;
+
+    type InnerType = T;
 
     fn get_value<'r>(args: &'r mut HashMap<TypeId, Box<dyn Any>>) -> Self::FnParamType<'r> {
 
-
-        return Global::<'r> {
-            inner: args.get(&TypeId::of::<Self::FnParamType::<'static>>()).unwrap().downcast_ref::<T>().unwrap()
+        return Global {
+            inner: *args.remove(&TypeId::of::<Self::FnParamType::<'static>>()).unwrap().downcast::<T>().unwrap()
         }
     }
 
     fn get_inner(self) -> Self::InnerType {
-        return self.inner.to_owned()
+        return self.inner
     }
 
 }

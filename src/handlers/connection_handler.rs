@@ -1,16 +1,16 @@
 use std::collections::HashMap;
 use std::net::TcpStream;
 use std::io::{BufReader, BufRead, Write};
-use crate::resource_sys::system::{ArgsCollection, Req, Res};
+use crate::resource_sys::system::{ArgsCollection, Req, Res, Global};
 use crate::utils::parser::parse_request;
 
 use super::route_handler::RouteHandler;
 
-pub fn route_handler (route_handler: &mut RouteHandler) {
-    
-}
+// pub fn route_handler (route_handler: &mut RouteHandler) {
 
-pub fn stream_handler (mut stream: TcpStream, routes: &mut RouteHandler) {
+// }
+
+pub fn stream_handler<G: 'static> (mut stream: TcpStream, routes: &mut RouteHandler<G>) {
 
     let buffer = BufReader::new(&mut stream);
 
@@ -22,13 +22,14 @@ pub fn stream_handler (mut stream: TcpStream, routes: &mut RouteHandler) {
 
     let mut args = ArgsCollection::init();
 
+    
 
     //DUMMY DATA
     args.add_param(Req {
-        inner: 300
+        inner: 3
     });
 
-    let opt = routes.execute_route(RouteHandler::to_route(request_iter), args);
+    let opt = routes.execute_route(RouteHandler::<G>::to_route(request_iter), args);
 
     // dbg!(opt.return_method()());
 

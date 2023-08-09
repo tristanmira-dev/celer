@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::resource_sys::system::{self, ArgsCollection, System};
+use crate::resource_sys::system::{self, ArgsCollection, System, Global};
 use crate::http::http_methods;
 // use crate::http::transaction::Response;
 //Delete, Post, Put
@@ -11,17 +11,100 @@ use crate::http::http_methods;
 // //...TO BE DECIDED
 // }
 
-pub struct RouteDetails {
+pub struct Route {
     pub method: String,
-    pub route: String
+    pub system: Box<dyn System>,
+    pub route: String,
+}
+
+pub struct RouteBuilder {
+    staging_routes: Vec<Route>
+}
+
+impl RouteBuilder {
+    pub fn new() -> Self {
+        Self {
+            staging_routes: Vec::new()
+        }
+    }
+
+
+    pub fn get<T: System + 'static>(mut self, route: String, f: T) -> Self {
+
+        let route = Route { method: "GET".to_string(), route, system: Box::new(f)  };
+
+        self.staging_routes.push(route);
+
+        return self;
+        
+    }
+
+    pub fn post<T: System + 'static>(mut self, route: String, f: T) -> Self  {
+
+        let route = Route { method: "POST".to_string(), route, system: Box::new(f)  };
+
+        self.staging_routes.push(route);
+
+        return self;
+    }
+
+    pub fn put<T: System + 'static>(mut self, route: String, f: T) -> Self  {
+
+        let route = Route { method: "PUT".to_string(), route, system: Box::new(f)  };
+
+        self.staging_routes.push(route);
+
+        return self;
+        
+    }
+    
+
+    pub fn delete<T: System + 'static>(mut self, route: String, f: T) -> Self  {
+        
+        let route = Route { method: "DELETE".to_string(), route, system: Box::new(f)  };
+
+        self.staging_routes.push(route);
+
+        return self;
+     
+    }
+
+
+    pub fn init(self) -> RouteHandler<i32> {
+
+        let iter = self.staging_routes.into_iter();
+
+        let mut route_handler = RouteHandler::new();
+
+
+        for i in iter {
+
+            route_handler.routes.insert(
+                i.method.clone() + " " + &i.route.clone(), 
+                RouteDetails { 
+                    details: Route { 
+                        method: i.method.clone(), route: i.route.clone(), system: i.system, 
+                    }, 
+                    global: Global { inner: 0 } 
+                });
+        }
+
+        
+        return route_handler
+    }
+}
+
+pub struct RouteDetails<T: 'static> {
+    pub details: Route,
+    pub global: Global<T>
 }
 
 
-pub struct RouteHandler {
-    pub routes: HashMap<String, Box<dyn system::System>>
+pub struct RouteHandler<G: 'static> {
+    pub routes: HashMap<String, RouteDetails<G>>
 }
 
-impl RouteHandler {
+impl<G: 'static,> RouteHandler<G> {
     pub fn new() -> Self {
         Self {
             routes: HashMap::new()
@@ -33,48 +116,8 @@ impl RouteHandler {
           
     }
 
-    pub fn get<T: System + 'static>(self, route: String, f: T) -> Self {
-        let route = RouteDetails { method: "GET".to_string(), route };
-
-        self.insert_route(route, Box::new(f))
-        
-    }
-
-    pub fn post<T: System + 'static>(self, route: String, f: T) -> Self {
-
-        let route = RouteDetails { method: "POST".to_string(), route };
-
-        self.insert_route(route, Box::new(f))
-        
-    }
-
-    pub fn put<T: System + 'static>(self, route: String, f: T) -> Self {
-        let route = RouteDetails { method: "PUT".to_string(), route };
-
-        self.insert_route(route, Box::new(f))
-        
-    }
-    
-
-    pub fn delete<T: system::System + 'static>(self, route: String, f: T) -> Self {
-        let route = RouteDetails { method: "DELETE".to_string(), route };
-
-        self.insert_route(route, Box::new(f))
-        
-        
-    }
-
-
     pub fn execute_route(&mut self, route: String, mut args: ArgsCollection) {
-        self.routes.get_mut(&route).unwrap().call_system(&mut args.args);
-    }
-
-
-    pub fn insert_route(mut self, route: RouteDetails, f: Box<dyn system::System>) -> Self {
-
-        self.routes.insert(route.method + " " + &route.route, f);
-
-        return self
+        self.routes.get_mut(&route).unwrap().details.system.call_system(&mut args.args);
     }
 
 

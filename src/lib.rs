@@ -1,4 +1,4 @@
-use std::{net::TcpListener, io::{Error}, collections::HashMap};
+use std::{net::TcpListener, io::{Error}, collections::HashMap, any::{TypeId, Any}};
 
 use handlers::route_handler::{RouteDetails, RouteHandler};
 use resource_sys::system::{Req, Res, IntoSystem, System};
@@ -22,21 +22,22 @@ pub mod resource_sys {
 pub mod thread_pool;
 
 
-pub struct Application {
+pub struct Application<G: 'static> {
     listener: Result<TcpListener, Error>,
-    route_collection: RouteHandler
+    route_collection: RouteHandler<G>
 }
 
 
-impl Application {
 
-    pub fn new(address: &str, port: &str, route: RouteHandler) -> Self {
+impl<G: 'static> Application<G> {
+
+    pub fn new(address: &str, port: &str, route: RouteHandler<G>) -> Self {
         let full_address = address.to_string() + ":" + port;
         let listener = TcpListener::bind(&full_address);
 
         Application {
             listener,
-            route_collection: route
+            route_collection: route,
         }
     
     }
