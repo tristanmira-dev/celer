@@ -10,7 +10,7 @@ use super::route_handler::RouteHandler;
 
 // }
 
-pub fn stream_handler<G: 'static> (mut stream: TcpStream, routes: &mut RouteHandler<G>) {
+pub fn stream_handler (mut stream: TcpStream, routes: &mut RouteHandler) {
 
     let buffer = BufReader::new(&mut stream);
 
@@ -29,7 +29,7 @@ pub fn stream_handler<G: 'static> (mut stream: TcpStream, routes: &mut RouteHand
         inner: 3
     });
 
-    let opt = routes.execute_route(RouteHandler::<G>::to_route(request_iter), args);
+    let opt = routes.execute_route(RouteHandler::to_route(request_iter), args);
 
     // dbg!(opt.return_method()());
 

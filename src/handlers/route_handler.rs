@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::collections::HashMap;
 use crate::resource_sys::system::{self, ArgsCollection, System, Global};
 use crate::http::http_methods;
@@ -11,14 +12,17 @@ use crate::http::http_methods;
 // //...TO BE DECIDED
 // }
 
+
+
 pub struct Route {
     pub method: String,
     pub system: Box<dyn System>,
     pub route: String,
+    pub global: Option<Box<dyn Any>>
 }
 
 pub struct RouteBuilder {
-    staging_routes: Vec<Route>
+    staging_routes: Vec<Route>,
 }
 
 impl RouteBuilder {
@@ -31,7 +35,7 @@ impl RouteBuilder {
 
     pub fn get<T: System + 'static>(mut self, route: String, f: T) -> Self {
 
-        let route = Route { method: "GET".to_string(), route, system: Box::new(f)  };
+        let route = Route { method: "GET".to_string(), route, system: Box::new(f), global: None  };
 
         self.staging_routes.push(route);
 
@@ -41,7 +45,7 @@ impl RouteBuilder {
 
     pub fn post<T: System + 'static>(mut self, route: String, f: T) -> Self  {
 
-        let route = Route { method: "POST".to_string(), route, system: Box::new(f)  };
+        let route = Route { method: "POST".to_string(), route, system: Box::new(f), global: None  };
 
         self.staging_routes.push(route);
 
@@ -50,7 +54,7 @@ impl RouteBuilder {
 
     pub fn put<T: System + 'static>(mut self, route: String, f: T) -> Self  {
 
-        let route = Route { method: "PUT".to_string(), route, system: Box::new(f)  };
+        let route = Route { method: "PUT".to_string(), route, system: Box::new(f), global: None  };
 
         self.staging_routes.push(route);
 
@@ -61,7 +65,7 @@ impl RouteBuilder {
 
     pub fn delete<T: System + 'static>(mut self, route: String, f: T) -> Self  {
         
-        let route = Route { method: "DELETE".to_string(), route, system: Box::new(f)  };
+        let route = Route { method: "DELETE".to_string(), route, system: Box::new(f), global: None  };
 
         self.staging_routes.push(route);
 
@@ -69,42 +73,77 @@ impl RouteBuilder {
      
     }
 
-
-    pub fn init(self) -> RouteHandler<i32> {
-
-        let iter = self.staging_routes.into_iter();
-
-        let mut route_handler = RouteHandler::new();
+    pub fn with_global<T: 'static> (mut self, global: T) -> Self {
+        let size: usize = self.staging_routes.len();
 
 
-        for i in iter {
+        let route = self.staging_routes.get_mut(size);
 
-            route_handler.routes.insert(
-                i.method.clone() + " " + &i.route.clone(), 
-                RouteDetails { 
-                    details: Route { 
-                        method: i.method.clone(), route: i.route.clone(), system: i.system, 
-                    }, 
-                    global: Global { inner: 0 } 
-                });
+
+        match route {
+            None => {
+
+            },
+
+            Some(route) => {
+                route.global = Option::Some(Box::new(global)); 
+            }
         }
 
-        
-        return route_handler
+        return self;
     }
+
+    pub fn to_handler(self) -> RouteHandler {
+
+        let mut route_map = HashMap::new();
+
+        for i in self.staging_routes {
+
+            
+            route_map.insert(i.method.clone() + " " + &i.route, RouteDetails { details: i });
+            
+
+        }
+
+
+        RouteHandler { routes: route_map }
+    }
+
+
+    // pub fn init(self) -> RouteHandler<i32> {
+
+    //     let iter = self.staging_routes.into_iter();
+
+    //     let mut route_handler = RouteHandler::new();
+
+
+    //     for i in iter {
+
+    //         route_handler.routes.insert(
+    //             i.method.clone() + " " + &i.route.clone(), 
+    //             RouteDetails { 
+    //                 details: Route { 
+    //                     method: i.method.clone(), route: i.route.clone(), system: i.system, 
+    //                 }, 
+    //                 global: Global { inner: 0 } 
+    //             });
+    //     }
+
+        
+    //     return route_handler
+    // }
 }
 
-pub struct RouteDetails<T: 'static> {
+pub struct RouteDetails {
     pub details: Route,
-    pub global: Global<T>
 }
 
 
-pub struct RouteHandler<G: 'static> {
-    pub routes: HashMap<String, RouteDetails<G>>
+pub struct RouteHandler {
+    pub routes: HashMap<String, RouteDetails>
 }
 
-impl<G: 'static,> RouteHandler<G> {
+impl RouteHandler {
     pub fn new() -> Self {
         Self {
             routes: HashMap::new()
