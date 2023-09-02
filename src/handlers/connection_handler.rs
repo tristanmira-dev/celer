@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::collections::HashMap;
 use std::net::TcpStream;
 use std::io::{BufReader, BufRead, Write};
@@ -19,17 +20,23 @@ pub fn stream_handler (mut stream: TcpStream, routes: &mut RouteHandler) {
     let request_iter = parse_request(&mut request_iter);
 
     dbg!(&request_iter);
-
+ 
     let mut args = ArgsCollection::init();
 
     
 
-    //DUMMY DATA
-    args.add_param(Req {
-        inner: 3
-    });
+    
 
-    let opt = routes.execute_route(RouteHandler::to_route(request_iter), args);
+    let x = routes.routes.get(&RouteHandler::to_route(&request_iter));
+
+    let a = x.unwrap().details.global.as_ref().unwrap().clone();
+
+    //DUMMY DATA
+    args.add_global(a);
+
+    routes.execute_route(RouteHandler::to_route(&request_iter), args);
+
+
 
     // dbg!(opt.return_method()());
 

@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::collections::HashMap;
+use std::rc::Rc;
 use crate::resource_sys::system::{self, ArgsCollection, System, Global};
 use crate::http::http_methods;
 // use crate::http::transaction::Response;
@@ -14,12 +15,21 @@ use crate::http::http_methods;
 
 
 
+
 pub struct Route {
     pub method: String,
     pub system: Box<dyn System>,
     pub route: String,
-    pub global: Option<Box<dyn Any>>
+    pub global: Option<Rc<dyn Any>>
 }
+
+
+// impl Route {
+//     fn clone_box(&self) -> Box<dyn Any> {
+//         self.globals
+//     }
+// }
+
 
 pub struct RouteBuilder {
     staging_routes: Vec<Route>,
@@ -77,8 +87,7 @@ impl RouteBuilder {
         let size: usize = self.staging_routes.len();
 
 
-        let route = self.staging_routes.get_mut(size);
-
+        let route = self.staging_routes.get_mut(size-1);
 
         match route {
             None => {
@@ -86,7 +95,9 @@ impl RouteBuilder {
             },
 
             Some(route) => {
-                route.global = Option::Some(Box::new(global)); 
+                
+                println!("{}", route.route);
+                route.global = Option::Some(Rc::new(global)); 
             }
         }
 
@@ -134,6 +145,7 @@ impl RouteBuilder {
     // }
 }
 
+
 pub struct RouteDetails {
     pub details: Route,
 }
@@ -150,12 +162,15 @@ impl RouteHandler {
         }
     }
 
-    pub fn to_route(req_collection: Vec<String>) -> String {
+    pub fn to_route(req_collection: &Vec<String>) -> String {
         return req_collection[0].to_string() + " " + &req_collection[1];
           
     }
 
     pub fn execute_route(&mut self, route: String, mut args: ArgsCollection) {
+
+        dbg!("{}", self.routes.keys());
+
         self.routes.get_mut(&route).unwrap().details.system.call_system(&mut args.args);
     }
 
