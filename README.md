@@ -1,3 +1,6 @@
+# Server API for Rust
+## eg usage
+```rust
 use std::{any::TypeId, collections::HashMap};
 
 use celer::{Application, resource_sys::system::{Req, Res, IntoSystem, Global, ArgsCollection}, handlers::route_handler::{RouteHandler, RouteBuilder}};
@@ -42,4 +45,5 @@ fn main() {
     });
 
 }
+
 
